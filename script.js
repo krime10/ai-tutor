@@ -1,5 +1,5 @@
 const userName =
-    prompt("Enter your name:");
+    prompt("Enter your name:") || "Student";
 
 async function sendMessage() {
 
@@ -68,3 +68,17 @@ async function sendMessage() {
         `;
     }
 }
+document
+    .getElementById("question")
+    .addEventListener("keydown", function(event) {
+
+        if (
+            event.key === "Enter" &&
+            !event.shiftKey
+        ) {
+
+            event.preventDefault();
+
+            sendMessage();
+        }
+    });
