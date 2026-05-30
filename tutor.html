@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Tutor Chat</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <section class="tutor-shell">
+        <header class="tutor-header">
+            <div>
+                <h1>AI Tutor</h1>
+                <p id="welcome-text">Loading...</p>
+                <p id="student-profile" class="secondary-text"></p>
+            </div>
+            <button class="button secondary" id="logout-button">Logout</button>
+        </header>
+
+        <div id="chat-container" class="chat-container">
+            <div class="bot-message">Hi! 👋 I'm your AI tutor. Ask a question to begin.</div>
+        </div>
+
+        <div id="input-area" class="input-area">
+            <textarea id="question" placeholder="Ask a question..." rows="2"></textarea>
+            <button class="button primary" id="send-button">Send</button>
+        </div>
+    </section>
+    <script src="/static/script.js"></script>
+</body>
+</html>

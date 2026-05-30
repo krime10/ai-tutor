@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Register - AI Tutor</title>
+    <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+    <main class="page-card form-card">
+        <h1>Register</h1>
+        <form id="register-form">
+            <label for="fullName">Full name</label>
+            <input type="text" id="fullName" name="fullName" required>
+
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" required>
+
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" required>
+
+            <label for="academicClass">Academic class</label>
+            <input type="text" id="academicClass" name="academicClass" required>
+
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" min="5" required>
+
+            <label for="favoriteSubjects">Favorite subjects</label>
+            <input type="text" id="favoriteSubjects" name="favoriteSubjects" required>
+
+            <label>Interests / Hobbies</label>
+            <div class="checkbox-grid">
+                <label><input type="checkbox" name="interests" value="Sports"> Sports</label>
+                <label><input type="checkbox" name="interests" value="Music"> Music</label>
+                <label><input type="checkbox" name="interests" value="Coding"> Coding</label>
+                <label><input type="checkbox" name="interests" value="Reading"> Reading</label>
+                <label><input type="checkbox" name="interests" value="Art"> Art</label>
+                <label><input type="checkbox" name="interests" value="Science"> Science</label>
+                <label><input type="checkbox" name="interests" value="Gaming"> Gaming</label>
+                <label><input type="checkbox" name="interests" value="Math Puzzles"> Math Puzzles</label>
+            </div>
+
+            <div class="button-row">
+                <button class="button primary" type="submit">Register</button>
+            </div>
+            <p class="secondary-text">Already registered? <a href="/login">Login</a></p>
+            <p id="register-message" class="message"></p>
+        </form>
+    </main>
+    <script src="/static/auth.js"></script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+[
+  {
+    "fullName": "Krishna Mohan Unnam",
+    "username": "krime10",
+    "passwordHash": "c58cbfbb66c4fe78e06bad6ee94dbf570e461dc98d520a9a47b63cca59e8d00d",
+    "academicClass": "X",
+    "age": 15,
+    "favoriteSubjects": "Maths, English"
+  },
+  {
+    "fullName": "Krishna Mohan Unnam",
+    "username": "krime",
+    "passwordHash": "c58cbfbb66c4fe78e06bad6ee94dbf570e461dc98d520a9a47b63cca59e8d00d",
+    "academicClass": "x",
+    "age": 15,
+    "favoriteSubjects": "Physics, Maths, English"
+  }
+]
