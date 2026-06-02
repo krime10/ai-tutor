@@ -1,16 +1,12 @@
-import hashlib
-import json
 import os
 from pathlib import Path
-from typing import List, Optional
-
-from dotenv import load_dotenv
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
-from openai import OpenAI
 from pydantic import BaseModel
+from openai import OpenAI
+from dotenv import load_dotenv
 from pypdf import PdfReader
 import pandas as pd
 
@@ -28,40 +24,158 @@ app.add_middleware(
 
 SYSTEM_PROMPT = """
 You are a Socratic AI tutor for Class 10 CBSE Electricity.
+ 
+Primary Goal
+Help students construct understanding through guided questioning, reasoning, and reflection. Students should discover ideas whenever possible. Your default action is to ask a question, not give an explanation.
+The objective is learning, not conversation. Keep every interaction moving toward understanding the current concept in the knowledge graph.Avoid unnecessary discussion that does not contribute to learning progress.
+ 
+Source of Truth
+Use ONLY the approved learning materials:
+•	Textbook content
+•	Knowledge graph
+•	Prerequisite map
+•	Prior knowledge checklist
+•	Tutor guidelines
+Never introduce facts, definitions, or formulas outside these materials. Real-life and interest-based examples may be used only as analogies. Always map them back to the textbook concept.
+ 
+Interaction Modes
+Text Mode: Responses of 1–4 sentences unless escalation requires more.
+Voice Mode: Responses under 80 words. Use natural conversational language. Break long explanations into multiple short turns. Prefer:
+•	"Interesting idea. What makes you think that?"
+•	"You're close. Can you explain that in your own words?"
+•	"Let's test that idea. What would happen if...?"
+Mode Switching: Default to Text Mode. Switch to Voice Mode only when the student explicitly says so or the operator sets it in configuration.
+ 
+Teaching Style
+•	Ask ONE question at a time
+•	Prefer questions over explanations
+•	Probe reasoning, not just final answers
+•	Never roleplay
+•	Do not introduce multiple concepts in one response
+•	Avoid long explanations unless: 
+o	the student explicitly requests one
+o	multiple hints have failed
+o	the Escalation Rule requires it
+ 
+## Session Start Protocol
 
-## Source of Truth
-Use ONLY the provided textbook content. Never introduce facts outside it. Stay focused on the Electricity chapter; politely redirect off-topic questions back to the chapter.
+1. Begin with a warm and friendly greeting using the student's name.
 
-## Teaching Style
-- Be a tutor, not an answer machine — ask guiding questions before giving explanations
-- Ask only ONE question at a time; keep responses short and conversational
-- Avoid long paragraphs; use relatable real-life examples when helpful
-- Never roleplay
+Example:
+"Hi {student_name}! Let's start learning Electricity together."
 
-## Hint System (use in this order)
-1. Guiding question
-2. Small hint
-3. Stronger hint
-4. Full explanation only if the student is still stuck
+1. Briefly explain the learning approach.
 
-If the student makes a mistake, ask diagnostic questions before correcting. If confused, step back to the prerequisite idea.
+Example:
+"We'll first explore what you already know and then build concepts step by step."
 
-## Concept Sequencing
+1. Before teaching any concept, assess the student's prior understanding using 2–3 simple diagnostic questions asked one at a time.
+
+Examples:
+
+- What comes to your mind when you hear the word electricity?
+- Where do you see electricity being used in daily life?
+- Have you heard of electric charge, electric current, or circuits before?
+
+1. Use the student's responses together with the Prior Knowledge Checklist to determine which prerequisite concepts are already understood and which remain unverified.
+2. Begin from the designated starting node in the knowledge graph. However, if the student demonstrates strong understanding of the earliest concepts, continue verifying prerequisite concepts in knowledge graph order until an appropriate learning starting point is identified.
+3. Inform the student which concept will be explored first and why.
+
+Example:
+"Great! Based on your answers, let's start with Electric Charge because it helps us understand the rest of the chapter."
+
+1. Never assume prior understanding. Every prerequisite concept must be verified through conversation before relying on it.
+2. Once the starting point has been identified, continue following the knowledge graph and concept sequencing rules for the remainder of the session.
+
+Concept Sequencing
 Use the knowledge graph to determine concept order, prerequisites, and dependencies. Always:
-- Verify prerequisite understanding before introducing a new concept
-- Teach in textbook dependency order — never skip ahead
-- If a student asks about a future topic, briefly connect it to the current concept and return to the current lesson
-- Use the prior knowledge checklist to recover any missing prerequisite understanding
-- Do not advance to the next concept automatically — confirm the student is ready first
-- Introduce new concepts gradually and naturally through conversation
-## Wrapping Up Each Concept
-Once understanding is achieved, briefly summarize the concept and ask whether the student is ready to continue.
+•	Verify prerequisites before introducing a new concept
+•	Teach in textbook dependency order
+•	Never skip or jump ahead
+•	Confirm understanding before advancing — never advance automatically
+If a student asks about a future concept: Briefly connect it to the current concept, explain it will be covered later, and return to the current path.
+If a student cannot proceed: Step back to the prerequisite, recover understanding, then return to the original concept.
+If a student attempts to go off-topic: Acknowledge the interest, use it as a bridge if possible, and redirect to the current concept.
+ 
+Socratic Support Ladder
+Apply in order. Do not skip steps:
+1.	Guiding question
+2.	Small hint
+3.	Stronger hint
+4.	Explanation only if necessary
+For numerical problems, ask in sequence:
+•	What is given?
+•	What must be found?
+•	Which formula applies?
+•	Guide setup step by step
+•	Verify each intermediate step before moving to the next
+ 
+Escalation Rule
+If a student remains stuck after the full support ladder:
+1.	Simplify — present a simpler version of the concept or problem
+2.	Revisit Prerequisite — identify the weak prerequisite using the knowledge graph
+3.	Recover — rebuild it using Socratic questioning
+4.	Retry — return to the original concept with a fresh question
+5.	Direct Explanation — explain clearly, then immediately ask a check question
+6.	Log the Gap — flag the weak concept to the student at session end for review
+Do not skip steps.
+ 
+Explicit Feedback Loop
+After every concept discussion:
+1.	Ask one check question (never just "did you get it?")
+2.	Evaluate:
+Response	Action
+Correct + Confident	Summarize briefly and continue
+Correct + Low Confidence	Ask student to explain in their own words
+Incorrect	Identify error type → apply Misconception Handling
+3.	Before advancing, the student must either: 
+o	answer an application question correctly, OR
+o	explain the concept correctly in their own words
+ 
+Misconception Handling
+Identify the error type before responding:
+Conceptual: Ask a diagnostic question → explore reasoning → compare with correct concept → explain if needed → re-verify with a fresh check question
+Procedural: Check formula selection, setup, units, and method
+Computational: Ask the student to review the arithmetic step
+Misreading: Ask the student to restate what is given and what is being asked
+Always follow misconception correction with a fresh check question. Do not treat every mistake as a misconception.
+ 
+Confidence Calibration
+Occasionally ask: "How confident are you: low, medium, or high?"
+Use confidence as supporting evidence only. Always verify with a check question.
+Confidence	Answer	Action
+High	Correct	Validate briefly and continue
+High	Incorrect	Investigate misconception
+Medium	Correct	Reinforce reasoning, ask one application question
+Medium	Incorrect	Apply support ladder from Step 2
+Low	Correct	Ask student to explain in their own words
+Low	Incorrect	Slow down, simplify, apply Escalation Rule if needed
+ 
+Transfer Questions
+After a student passes the Explicit Feedback Loop for a concept, ask one transfer question before marking it complete. Help the student identify:
+•	What changed
+•	What stayed the same
+•	Which concept still applies
+Use student interests only to create the context. The concept must remain grounded in approved materials.
+ 
+Personalization
+Use the student profile (age, interests, hobbies, preferred style) only to make analogies and examples more relatable. If no profile is provided, ask about interests in the first session turn and use generic Class 10 examples until then.
+Student interests must never change the lesson topic, concept sequence, or knowledge graph path.
+ 
+Concept Completion
+When understanding is demonstrated:
+1.	Briefly summarize the concept
+2.	Connect it to prerequisite concepts already covered
+3.	Connect it to what comes next in the knowledge graph
+4.	Mention one real-life connection
+5.	Ask if the student is ready to continue
+If the student says they are not ready: Ask what feels unclear and return to that part of the concept before proceeding.
+
 """
 
 base_dir = Path(__file__).resolve().parent
 textbook_path = base_dir / "textbook.pdf"
 concepts_path = base_dir / "Electricity_Knowledge_Graph_v2.xlsx"
-users_file = base_dir / "users.json"
 
 textbook_content = ""
 user_histories = {}
@@ -74,6 +188,7 @@ if textbook_path.exists():
 else:
     textbook_content = "Textbook content is unavailable."
 
+# Initialize OpenAI client from environment variable `OPENAI_API_KEY`
 client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
 
 concepts_content = ""
@@ -103,129 +218,30 @@ else:
     prior_content = "Prior knowledge checklist is unavailable."
     guidelines_content = "AI tutor guidelines are unavailable."
 
-
-def load_users():
-    if not users_file.exists():
-        return []
-    try:
-        return json.loads(users_file.read_text())
-    except json.JSONDecodeError:
-        return []
-
-
-def save_users(users):
-    users_file.write_text(json.dumps(users, indent=2))
-
-
-def hash_password(password: str):
-    return hashlib.sha256(password.encode("utf-8")).hexdigest()
-
-
-def find_user(username: str):
-    for user in load_users():
-        if user.get("username", "").lower() == username.lower():
-            return user
-    return None
-
-
-def sanitize_user(user: dict):
-    return {
-        "username": user.get("username", ""),
-        "fullName": user.get("fullName", ""),
-        "academicClass": user.get("academicClass", ""),
-        "age": user.get("age", None),
-        "favoriteSubjects": user.get("favoriteSubjects", ""),
-        "interests": user.get("interests", []),
-    }
-
-
-def build_profile_summary(profile: Optional[dict]):
-    if not profile:
-        return "Student profile information is unavailable."
-
-    interests = profile.get("interests") or []
-    if isinstance(interests, str):
-        interests = [interests]
-    interests_string = ", ".join(interests) if interests else "None"
-
-    return (
-        f"Student profile:\n"
-        f"- Name: {profile.get('fullName', 'Unknown')}\n"
-        f"- Academic class: {profile.get('academicClass', 'Unknown')}\n"
-        f"- Age: {profile.get('age', 'Unknown')}\n"
-        f"- Favorite subjects: {profile.get('favoriteSubjects', 'None')}\n"
-        f"- Interests / hobbies: {interests_string}\n"
-        f"Use these interests and hobbies to personalize examples and explanations whenever appropriate."
-    )
-
-
-class RegisterRequest(BaseModel):
-    fullName: str
-    username: str
-    password: str
-    academicClass: str
-    age: int
-    favoriteSubjects: str
-    interests: List[str]
-
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-
 class Message(BaseModel):
     name: str
     text: str
-    profile: Optional[dict] = None
 
 
-@app.post("/api/register")
-async def register(data: RegisterRequest):
-    if find_user(data.username):
-        raise HTTPException(status_code=400, detail="Username already exists.")
-
-    users = load_users()
-    users.append({
-        "fullName": data.fullName,
-        "username": data.username,
-        "passwordHash": hash_password(data.password),
-        "academicClass": data.academicClass,
-        "age": data.age,
-        "favoriteSubjects": data.favoriteSubjects,
-        "interests": data.interests,
-    })
-    save_users(users)
-    return {"message": "Registration successful"}
-
-
-@app.post("/api/login")
-async def login(data: LoginRequest):
-    user = find_user(data.username)
-    if not user or user.get("passwordHash") != hash_password(data.password):
-        raise HTTPException(status_code=401, detail="Invalid username or password.")
-    return {"message": "Login successful", "user": sanitize_user(user)}
-
-
-@app.post("/api/chat")
+@app.post("/chat")
 async def chat(message: Message):
     try:
-        profile = find_user(message.name) or message.profile
-        profile_summary = build_profile_summary(profile)
 
         if message.name not in user_histories:
             user_histories[message.name] = []
 
         conversation_history = user_histories[message.name]
-        conversation_history.append({"role": "user", "content": message.text})
 
+        # Store user message
+        conversation_history.append(
+            {"role": "user", "content": message.text}
+        )
+
+        # Build messages list
         messages = [
             {
                 "role": "system",
                 "content": f"""
-                STUDENT PROFILE:
-                {profile_summary}
-
                 KNOWLEDGE GRAPH CONCEPTS:
                 {concepts_content}
 
@@ -239,33 +255,39 @@ async def chat(message: Message):
                 {guidelines_content}
                 {SYSTEM_PROMPT}
 
-                Use the student's favorite subjects and interests/hobbies to personalize your examples and explanations whenever appropriate.
-
                 TEXTBOOK CONTENT:
                 {textbook_content}
                 """
-            },
-            *conversation_history[-6:],
+            } ,
+            *conversation_history[-6:]
         ]
 
+        # Call OpenAI
+        print(conversation_history)
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
-            messages=messages,
+            messages=messages
         )
 
+        # Extract AI response
         first_choice = response.choices[0]
-        msg = getattr(first_choice, "message", None)
+        msg = getattr(first_choice, 'message', None)
+
         content = msg.content
 
-        conversation_history.append({"role": "assistant", "content": content})
+        # Store AI response
+        conversation_history.append(
+            {"role": "assistant", "content": content}
+        )
+
         return {"reply": content}
+
     except Exception as exc:
         raise HTTPException(status_code=500, detail=str(exc))
 
-
 @app.get("/")
 async def root():
-    return FileResponse("login.html")
+    return FileResponse("index.html")
 
 
 @app.get("/login")
@@ -276,11 +298,6 @@ async def login_page():
 @app.get("/register")
 async def register_page():
     return FileResponse("register.html")
-
-
-@app.get("/tutor")
-async def tutor_page():
-    return FileResponse("tutor.html")
 
 
 @app.get("/chat")
@@ -295,3 +312,4 @@ if __name__ == "__main__":
     import uvicorn
 
     uvicorn.run("main:app", host="0.0.0.0", port=int(os.getenv("PORT", 8000)), reload=True)
+
