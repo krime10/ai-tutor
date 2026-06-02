@@ -2,17 +2,50 @@
   {
     "fullName": "Krishna Mohan Unnam",
     "username": "krime10",
-    "passwordHash": "c58cbfbb66c4fe78e06bad6ee94dbf570e461dc98d520a9a47b63cca59e8d00d",
+    "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
     "academicClass": "X",
     "age": 15,
-    "favoriteSubjects": "Maths, English"
+    "favoriteSubjects": "Maths, English",
+    "interests": []
   },
   {
     "fullName": "Krishna Mohan Unnam",
     "username": "krime",
-    "passwordHash": "c58cbfbb66c4fe78e06bad6ee94dbf570e461dc98d520a9a47b63cca59e8d00d",
+    "passwordHash": "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8",
     "academicClass": "x",
     "age": 15,
-    "favoriteSubjects": "Physics, Maths, English"
+    "favoriteSubjects": "Physics, Maths, English",
+    "interests": []
+  },
+  {
+    "fullName": "Test Student",
+    "username": "teststudent",
+    "passwordHash": "7e6e0c3079a08c5cc6036789b57e951f65f82383913ba1a49ae992544f1b4b6e",
+    "academicClass": "10",
+    "age": 15,
+    "favoriteSubjects": "Physics, Math",
+    "interests": [
+      "Coding"
+    ]
+  },
+  {
+    "fullName": "Test",
+    "username": "test",
+    "passwordHash": "9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08",
+    "academicClass": "10",
+    "age": 15,
+    "favoriteSubjects": "Science",
+    "interests": []
+  },
+  {
+    "fullName": "krishna",
+    "username": "krime1",
+    "passwordHash": "c58cbfbb66c4fe78e06bad6ee94dbf570e461dc98d520a9a47b63cca59e8d00d",
+    "academicClass": "X",
+    "age": 15,
+    "favoriteSubjects": "maths",
+    "interests": [
+      "Sports"
+    ]
   }
 ]
